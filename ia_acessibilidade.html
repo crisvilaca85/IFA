@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IFA - Simulador de Tecnologias Assistivas</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-color: #f8fafc;
+            --accent-blue: #38bdf8;
+            --accent-green: #2dd4bf;
+            --danger: #ef4444;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            color: var(--accent-blue);
+            margin-bottom: 5px;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            max-width: 1000px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 25px;
+            flex: 1;
+            min-width: 300px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid #334155;
+        }
+
+        h2 {
+            color: var(--accent-green);
+            margin-top: 0;
+            border-bottom: 2px solid #334155;
+            padding-bottom: 10px;
+        }
+
+        /* Estilos da Muleta */
+        .slider-container {
+            margin: 20px 0;
+        }
+
+        input[type=range] {
+            width: 100%;
+            accent-color: var(--accent-green);
+        }
+
+        .sensor-display {
+            background-color: #020617;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-top: 15px;
+            transition: all 0.2s ease;
+        }
+
+        .alert-active {
+            background-color: var(--danger);
+            color: white;
+            animation: pulse 0.5s infinite alternate;
+        }
+
+        /* Estilos da Cadeira */
+        .simulation-area {
+            background-color: #020617;
+            height: 150px;
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+            margin-top: 15px;
+        }
+
+        .wheelchair {
+            width: 40px;
+            height: 40px;
+            background-color: var(--accent-blue);
+            border-radius: 50px;
+            position: absolute;
+            left: 20px;
+            top: 55px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.8rem;
+            transition: all 0.5s ease;
+        }
+
+        .obstacle {
+            width: 30px;
+            height: 60px;
+            background-color: var(--danger);
+            position: absolute;
+            right: 40px;
+            top: 45px;
+            border-radius: 4px;
+        }
+
+        .btn {
+            background-color: var(--accent-blue);
+            color: #0f172a;
+            border: none;
+            padding: 10px 20px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+            font-size: 1rem;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .log-box {
+            background-color: #020617;
+            font-family: monospace;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 15px;
+            height: 60px;
+            font-size: 0.9rem;
+            color: #94a3b8;
+        }
+
+        @keyframes pulse {
+            from { opacity: 0.6; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>IFA - Tecnologias Assistivas</h1>
+        <p>Demonstração Prática de Lógica e Programação</p>
+    </header>
+
+    <div class="container">
+
+        <div class="card">
+            <h2>1. Protótipo: Muleta Ultrassônica</h2>
+            <p>Mova o controle para simular a aproximação de um obstáculo na calçada:</p>
+            
+            <div class="slider-container">
+                <label>Distância do obstáculo: <span id="dist-val">200</span> cm</label>
+                <input type="range" id="sensor-range" min="10" max="200" value="200">
+            </div>
+
+            <div id="sensor-feedback" class="sensor-display">
+                Caminho Livre 👍
+            </div>
+            <p style="font-size: 0.85rem; color: #94a3b8; margin-top: 10px;">
+                *Ative o som do seu computador. O código altera a frequência do bipe conforme a distância reduz.
+            </p>
+        </div>
+
+        <div class="card">
+            <h2>2. IA: Cadeira Inteligente</h2>
+            <p>Simule a tomada de decisão automática da Inteligência Artificial ao detectar um perigo:</p>
+            
+            <div class="simulation-area">
+                <div id="chair" class="wheelchair">♿</div>
+                <div class="obstacle"></div>
+            </div>
+
+            <button class="btn" onclick="iniciarSimulacaoIA()">Ligar Piloto Automático</button>
+            
+            <div id="ia-log" class="log-box">
+                Status do Sistema: Aguardando inicialização...
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ==========================================
+        // LÓGICA DA MULETA ULTRASSÔNICA (Hardware/Sensor)
+        // ==========================================
+        const rangeInput = document.getElementById('sensor-range');
+        const distVal = document.getElementById('dist-val');
+        const feedback = document.getElementById('sensor-feedback');
+        
+        let audioCtx = null;
+        let beepInterval = null;
+
+        // Função para simular o som do Buzzer do Arduino
+        function emitirSom(frequencia, duracao) {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            
+            let osc = audioCtx.createOscillator();
+            let gain = audioCtx.createGain();
+            
+            osc.type = 'sine';
+            osc.frequency.value = frequencia;
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime); // Volume baixo para não incomodar
+            
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            osc.start();
+            setTimeout(() => osc.stop(), duracao);
+        }
+
+        function gerenciarBipe(distancia) {
+            clearInterval(beepInterval);
+            
+            if (distancia > 100) {
+                feedback.innerText = "Caminho Livre 👍";
+                feedback.className = "sensor-display";
+                return;
+            }
+            
+            // Quanto menor a distância, mais rápido é o intervalo do bipe (Igual ao Arduino)
+            let tempoIntervalo = distancia * 5; 
+            
+            if (distancia <= 30) {
+                feedback.innerText = "PERIGO IMINENTE! 🚨";
+                feedback.className = "sensor-display alert-active";
+                tempoIntervalo = 150; // Bipe ultra rápido
+            } else {
+                feedback.innerText = "Obstáculo Detectado! ⚠️";
+                feedback.className = "sensor-display";
+            }
+
+            beepInterval = setInterval(() => {
+                // Frequência do som fica mais aguda perto do obstáculo
+                let frequenciaSom = 600 + (100 - distancia) * 4;
+                emitirSom(frequenciaSom, 80);
+            }, tempoIntervalo);
+        }
+
+        rangeInput.addEventListener('input', (e) => {
+            const distancia = e.target.value;
+            distVal.innerText = distancia;
+            gerenciarBipe(distancia);
+        });
+
+
+        // ==========================================
+        // LÓGICA DA CADEIRA INTELIGENTE (Tomada de Decisão/IA)
+        // ==========================================
+        function iniciarSimulacaoIA() {
+            const chair = document.getElementById('chair');
+            const log = document.getElementById('ia-log');
+            
+            // Reinicia posições
+            chair.style.left = "20px";
+            chair.style.top = "55px";
+            log.innerHTML = "🤖 IA: Iniciando mapeamento do terreno...";
+
+            // Passo 1: Cadeira começa a andar
+            setTimeout(() => {
+                chair.style.left = "180px";
+                log.innerHTML = "🤖 IA: Movendo para frente. Velocidade: 4km/h.";
+            }, 1000);
+
+            // Passo 2: Cadeira "enxerga" o obstáculo e calcula o desvio
+            setTimeout(() => {
+                log.innerHTML = "🤖 IA: ! OBSTÁCULO DETECTADO !<br>Processando rota de fuga...";
+                chair.style.left = "240px"; // Chega perto
+            }, 2500);
+
+            // Passo 3: Executa a ação autônoma de desvio
+            setTimeout(() => {
+                chair.style.top = "10px"; // Desvia para cima
+                chair.style.left = "320px"; // Passa o obstáculo
+                log.innerHTML = "<span style='color: var(--accent-green)'>🤖 IA: Desvio executado com sucesso por comando neural/visão computacional.</span>";
+            }, 4000);
+        }
+    </script>
+</body>
+</html>
